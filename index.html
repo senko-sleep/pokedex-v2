@@ -1,109 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pokémon Educational Guide</title>
-    <meta name="description" content="Comprehensive Pokémon guide with stats, evolution chains, visual galleries, and trading cards">
-    
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Custom Styles -->
-    <link rel="stylesheet" href="src/css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pokedex</title>
+  <meta name="description" content="Comprehensive Pokémon guide with stats, evolution chains, visual galleries, and trading cards." />
+
+  <!-- Poké Ball Tab Icon -->
+  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="src/css/style.css" />
 </head>
-<body class="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
-    <div class="container mx-auto px-4 py-8">
-        <!-- Header -->
-        <div class="text-center mb-8">
-            <h1 class="text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                Pokémon Educational Guide
-            </h1>
-            <p class="text-lg text-gray-600">
-                Comprehensive information about any Pokémon - Stats, Evolution, Cards, and More
-            </p>
-        </div>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 text-gray-800">
+  <div class="container mx-auto px-4 py-8">
+    
+    <!-- Header -->
+    <header class="text-center mb-8">
+      <h1 class="text-5xl font-semibold text-red-400 drop-shadow-[1px_1px_0_#00000033] mb-2">
+        Pokédex
+      </h1>
+    </header>
 
-        <!-- Search Section -->
-        <div class="w-full max-w-2xl mx-auto mb-8">
-            <form id="searchForm" class="flex gap-2">
-                <input 
-                    type="text" 
-                    id="searchInput" 
-                    placeholder="Search Pokémon by name or ID (e.g., pikachu, 25, charizard-mega-x)"
-                    class="flex-1 text-lg px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button 
-                    type="submit" 
-                    id="searchButton"
-                    class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
-                >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                    Search
-                </button>
-            </form>
-            <p class="text-sm text-gray-500 mt-2">
-                Try: pikachu, charizard, mewtwo, eevee, lucario, greninja
-            </p>
-        </div>
+    <!-- Search Section -->
+    <section class="w-full max-w-2xl mx-auto mb-8">
+      <form id="searchForm" class="flex gap-2">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search Pokémon by name or ID (e.g., pikachu, 25, charizard-mega-x)"
+          class="flex-1 text-lg px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          aria-label="Search Pokémon"
+        />
+        <button
+          type="submit"
+          id="searchButton"
+          class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+          Search
+        </button>
+      </form>
+      <p class="text-sm text-gray-500 mt-2">
+        Try: pikachu, charizard, mewtwo, eevee, lucario, greninja
+      </p>
+    </section>
 
-        <!-- Loading State -->
-        <div id="loadingState" class="hidden flex items-center justify-center py-16">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <span class="ml-4 text-lg text-gray-600">Loading Pokémon data...</span>
-        </div>
-
-        <!-- Error State -->
-        <div id="errorState" class="hidden max-w-2xl mx-auto">
-            <div class="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-                <svg class="w-5 h-5 text-red-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
-                </svg>
-                <p id="errorMessage" class="text-red-800"></p>
-            </div>
-        </div>
-
-        <!-- Empty State -->
-        <div id="emptyState" class="text-center py-16">
-            <div class="text-6xl mb-4">🔍</div>
-            <p class="text-xl text-gray-600">Search for a Pokémon to get started!</p>
-            <p class="text-sm text-gray-500 mt-2">
-                Try searching for popular Pokémon like Pikachu, Charizard, or Mewtwo
-            </p>
-        </div>
-
-        <!-- Results Section -->
-        <div id="resultsSection" class="hidden">
-            <!-- Tabs -->
-            <div class="flex justify-center mb-6">
-                <div class="inline-flex bg-white rounded-lg shadow-sm p-1 gap-1">
-                    <button class="tab-button active" data-tab="overview">Overview</button>
-                    <button class="tab-button" data-tab="evolution">Evolution</button>
-                    <button class="tab-button" data-tab="gallery">Gallery</button>
-                    <button class="tab-button" data-tab="cards">Cards <span id="cardCount" class="ml-1"></span></button>
-                </div>
-            </div>
-
-            <!-- Tab Content -->
-            <div id="tabContent">
-                <!-- Overview Tab -->
-                <div id="overviewTab" class="tab-content active"></div>
-                
-                <!-- Evolution Tab -->
-                <div id="evolutionTab" class="tab-content hidden"></div>
-                
-                <!-- Gallery Tab -->
-                <div id="galleryTab" class="tab-content hidden"></div>
-                
-                <!-- Cards Tab -->
-                <div id="cardsTab" class="tab-content hidden"></div>
-            </div>
-        </div>
+    <!-- Loading State -->
+    <div id="loadingState" class="hidden flex items-center justify-center py-16">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <span class="ml-4 text-lg text-gray-600">Loading Pokémon data...</span>
     </div>
 
-    <!-- JavaScript -->
-    <script src="src/js/script.js"></script>
+    <!-- Error State -->
+    <div id="errorState" class="hidden max-w-2xl mx-auto">
+      <div class="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+        <svg class="w-5 h-5 text-red-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+            clip-rule="evenodd"></path>
+        </svg>
+        <p id="errorMessage" class="text-red-800"></p>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="text-center py-16">
+      <div class="text-6xl mb-4">🔍</div>
+      <p class="text-xl text-gray-600">Search for a Pokémon to get started!</p>
+      <p class="text-sm text-gray-500 mt-2">
+        (Zoom out to 90% for best experience) Try searching for Pikachu, Charizard, or Mewtwo.
+      </p>
+    </div>
+
+    <!-- Results Section -->
+    <section id="resultsSection" class="hidden">
+      <!-- Tabs -->
+      <div class="flex justify-center mb-6">
+        <div class="inline-flex bg-white rounded-lg shadow-sm p-1 gap-1">
+          <button class="tab-button active" data-tab="overview">Overview</button>
+          <button class="tab-button" data-tab="evolution">Evolution</button>
+          <button class="tab-button" data-tab="gallery">Gallery</button>
+          <button class="tab-button" data-tab="cards">Cards <span id="cardCount" class="ml-1"></span></button>
+        </div>
+      </div>
+
+      <!-- Tab Content -->
+      <div id="tabContent">
+        <div id="overviewTab" class="tab-content active"></div>
+        <div id="evolutionTab" class="tab-content hidden"></div>
+        <div id="galleryTab" class="tab-content hidden"></div>
+        <div id="cardsTab" class="tab-content hidden"></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Script -->
+  <script src="src/js/script.js"></script>
 </body>
 </html>

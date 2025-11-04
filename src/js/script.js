@@ -77,18 +77,12 @@ async function fetchCompletePokemonData(nameOrId) {
         );
         const allForms = await Promise.all(formPromises);
       
-        // Fetch TCG cards
-        const cardsResponse = await fetch(`${TCG_API_BASE}/cards?q=name:"${pokemon.name}"`);
-        const cardsData = await cardsResponse.json();
-        const cards = cardsData.data || [];
-      
         return {
             pokemon,
             species,
             evolutionChain,
             abilityDetails,
-            allForms,
-            cards
+            allForms
         };
     } catch (error) {
         throw error;
@@ -96,11 +90,10 @@ async function fetchCompletePokemonData(nameOrId) {
 }
 // Display Functions
 function displayResults(data) {
-    cardCount.textContent = `(${data.cards.length})`;
+    cardCount.textContent = '(...)';
     displayOverview(data);
     displayEvolution(data);
     displayGallery(data);
-    displayCards(data);
 }
 function displayOverview(data) {
     const { pokemon, species, abilityDetails } = data;
@@ -797,7 +790,7 @@ function showResults() {
 function hideResults() {
     resultsSection.classList.add('hidden');
 }
-function switchTab(tabName) {
+async function switchTab(tabName) {
     // Update button states
     tabButtons.forEach(btn => {
         if (btn.getAttribute('data-tab') === tabName) {
@@ -824,6 +817,37 @@ function switchTab(tabName) {
             tabs[key].classList.remove('active');
         }
     });
+
+    if (tabName === 'cards' && !currentPokemonData.cards) {
+        cardsTab.innerHTML = `
+            <div class="pokemon-card">
+                <div class="pokemon-card-header">
+                    <h3 class="text-xl font-bold">Trading Card Collection</h3>
+                </div>
+                <p class="text-gray-500 text-center py-8">Loading cards...</p>
+            </div>
+        `;
+
+        try {
+            const name = currentPokemonData.pokemon.name;
+            const cardsResponse = await fetch(`${TCG_API_BASE}/cards?q=name:"${name}"`);
+            if (!cardsResponse.ok) throw new Error('Failed to fetch cards');
+            const cardsData = await cardsResponse.json();
+            currentPokemonData.cards = cardsData.data || [];
+            displayCards(currentPokemonData);
+            cardCount.textContent = `(${currentPokemonData.cards.length})`;
+        } catch (error) {
+            alert(error.message || 'Failed to load cards');
+            cardsTab.innerHTML = `
+                <div class="pokemon-card">
+                    <div class="pokemon-card-header">
+                        <h3 class="text-xl font-bold">Trading Card Collection</h3>
+                    </div>
+                    <p class="text-red-500 text-center py-8">Failed to load cards: ${error.message || 'Unknown error'}</p>
+                </div>
+            `;
+        }
+    }
 }
 // Sound Function
 function playBeep(frequency = 440, duration = 200) {
