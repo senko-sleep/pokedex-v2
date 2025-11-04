@@ -85,23 +85,29 @@ async function handleRandom() {
             const json = await res.json();
             totalPokemon = json.count;
         }
-        let randomId;
+
+        let data;
         do {
-            randomId = Math.floor(Math.random() * totalPokemon) + 1;
-        } while (isNaN(randomId) || randomId <= 0);
-        const data = await fetchCompletePokemonData(randomId);
-        if (!data || !data.pokemon || !data.pokemon.id) throw new Error('Invalid Pokémon data');
+            const randomId = Math.floor(Math.random() * totalPokemon) + 1;
+            data = await fetchCompletePokemonData(randomId);
+        } while (!data || !data.pokemon || !Number.isInteger(data.pokemon.id) || data.pokemon.id <= 0);
+
         if (!allCards) {
             const cardsRes = await fetch('data/cards.json');
             if (!cardsRes.ok) throw new Error('Failed to load cards.json');
             allCards = await cardsRes.json();
         }
+
         const name = (data.pokemon.name || '').toLowerCase().trim();
-        data.cards = Array.isArray(allCards) ? allCards.filter(card => card.name && card.name.toLowerCase().includes(name)) : [];
+        data.cards = Array.isArray(allCards)
+            ? allCards.filter(card => card.name && card.name.toLowerCase().includes(name))
+            : [];
+
         currentPokemonData = data;
         displayResults(data);
         showResults();
         searchInput.value = data.pokemon.name;
+
     } catch (e) {
         showError(e.message || 'Failed to fetch random Pokémon data. Please try again.');
     } finally {
