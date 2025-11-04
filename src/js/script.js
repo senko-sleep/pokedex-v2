@@ -64,7 +64,7 @@ async function handleSearch(e) {
         currentPokemonData = data;
         displayResults(data);
         showResults();
-        playBeep(880, 200); // Done sound
+        //playBeep(880, 200); // Done sound
     } catch (error) {
         showError(error.message || 'Failed to fetch Pokémon data. Please check the name or ID and try again.');
     } finally {
@@ -97,7 +97,7 @@ async function handleRandom() {
         displayResults(data);
         showResults();
         searchInput.value = data.pokemon.name;
-        playBeep(880, 200); // Done sound
+        //playBeep(880, 200); // Done sound
     } catch (error) {
         showError(error.message || 'Failed to fetch random Pokémon data. Please try again.');
     } finally {
@@ -437,9 +437,9 @@ function displayOverview(data) {
             </div>
             <ul class="text-sm space-y-2 list-disc list-inside text-gray-600">
                 <li><strong>Role:</strong> ${pokemon.stats[1].base_stat > pokemon.stats[3].base_stat ? 'Physical' : 'Special'} Attacker</li>
-                <li><strong>Best Stats:</strong> ${pokemon.stats.sort((a, b) => b.base_stat - a.base_stat).slice(0, 2).map(s => s.stat.name.replace('-', ' ')).join(', ')}</li>
-                <li><strong>Type Coverage:</strong> Utilize ${pokemon.types.map(t => t.type.name).join(' and ')} type moves</li>
-                <li><strong>Primary Ability:</strong> ${pokemon.abilities[0].ability.name.replace('-', ' ')}</li>
+                <li><strong>Best Stats:</strong> ${pokemon.stats.sort((a, b) => b.base_stat - a.base_stat).slice(0, 2).map(s => capitalize(s.stat.name.replace('-', ' '))).join(', ')}</li>
+                <li><strong>Type Coverage:</strong> Utilize ${pokemon.types.map(t => capitalize(t.type.name)).join(' and ')} Type Moves</li>
+                <li><strong>Primary Ability:</strong> ${capitalize(pokemon.abilities[0].ability.name.replace('-', ' '))}</li>
             </ul>
         </div>
    
@@ -1189,7 +1189,9 @@ function playBeep(frequency = 440, duration = 200) {
 
 function playCry(url) {
     const audio = new Audio(url);
-    audio.play();
+    audio.play().catch(error => {
+        console.error('Error playing cry:', error);
+    });
 }
 
 function searchPokemon(name) {
@@ -1197,5 +1199,6 @@ function searchPokemon(name) {
     searchForm.submit();
 }
 
+//playBeep(440, 200);
 
 });
