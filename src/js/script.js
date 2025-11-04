@@ -1,8 +1,8 @@
 // API Configuration
 const POKEAPI_BASE = 'https://pokeapi.co/api/v2';
-const TCG_API_BASE = 'https://api.pokemontcg.io/v2';
 // Global state
 let currentPokemonData = null;
+let allCards = null;
 // DOM Elements
 const searchForm = document.getElementById('searchForm');
 const searchInput = document.getElementById('searchInput');
@@ -810,15 +810,17 @@ async function switchTab(tabName) {
             </div>
         `;
         try {
-            const name = currentPokemonData.pokemon.name;
-            const cardsResponse = await fetch(`${TCG_API_BASE}/cards?q=name:"${name}"`);
-            if (!cardsResponse.ok) throw new Error('Failed to fetch cards');
-            const cardsData = await cardsResponse.json();
-            currentPokemonData.cards = cardsData.data || [];
+            if (!allCards) {
+                const cardsResponse = await fetch('data/cards.json');
+                if (!cardsResponse.ok) throw new Error('Failed to load cards.json');
+                allCards = await cardsResponse.json();
+            }
+            const name = currentPokemonData.pokemon.name.toLowerCase();
+            const cards = allCards.filter(card => card.name.toLowerCase().includes(name));
+            currentPokemonData.cards = cards;
             displayCards(currentPokemonData);
             cardCount.textContent = `(${currentPokemonData.cards.length})`;
         } catch (error) {
-            alert(error.message || 'Failed to load cards');
             cardsTab.innerHTML = `
                 <div class="pokemon-card">
                     <div class="pokemon-card-header">
