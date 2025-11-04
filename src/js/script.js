@@ -30,13 +30,10 @@ tabButtons.forEach(button => {
 async function handleSearch(e) {
     e.preventDefault();
     const query = searchInput.value.trim().toLowerCase();
-  
     if (!query) return;
-  
     showLoading();
     hideError();
     hideResults();
-  
     try {
         const data = await fetchCompletePokemonData(query);
         currentPokemonData = data;
@@ -56,27 +53,27 @@ async function fetchCompletePokemonData(nameOrId) {
         const pokemonResponse = await fetch(`${POKEAPI_BASE}/pokemon/${nameOrId}`);
         if (!pokemonResponse.ok) throw new Error('Pokémon not found');
         const pokemon = await pokemonResponse.json();
-      
+    
         // Fetch species data
         const speciesResponse = await fetch(`${POKEAPI_BASE}/pokemon-species/${pokemon.id}`);
         const species = await speciesResponse.json();
-      
+    
         // Fetch evolution chain
         const evolutionResponse = await fetch(species.evolution_chain.url);
         const evolutionChain = await evolutionResponse.json();
-      
+    
         // Fetch ability details
         const abilityPromises = pokemon.abilities.map(a =>
             fetch(a.ability.url).then(r => r.json())
         );
         const abilityDetails = await Promise.all(abilityPromises);
-      
+    
         // Fetch all forms
         const formPromises = species.varieties.map(v =>
             fetch(v.pokemon.url).then(r => r.json())
         );
         const allForms = await Promise.all(formPromises);
-      
+    
         return {
             pokemon,
             species,
@@ -97,13 +94,37 @@ function displayResults(data) {
 }
 function displayOverview(data) {
     const { pokemon, species, abilityDetails } = data;
-  
     const description = species.flavor_text_entries.find(e => e.language.name === 'en');
     const genus = species.genera.find(g => g.language.name === 'en');
-  
     const maxStat = Math.max(...pokemon.stats.map(s => s.base_stat));
     const totalStats = pokemon.stats.reduce((sum, s) => sum + s.base_stat, 0);
-  
+    
+    let breedingHtml = '';
+    if (species.egg_groups.some(g => g.name === 'undiscovered' || g.name === 'no-eggs')) {
+        breedingHtml = '<p class="text-red-600 text-sm">This Pokémon cannot breed.</p>';
+    } else {
+        let notes = [];
+        if (species.gender_rate === -1) {
+            notes.push('Genderless Pokémon can only breed with Ditto.');
+        } else if (species.gender_rate === 0) {
+            notes.push('All male - must breed with Ditto or compatible female from same egg group.');
+        } else if (species.gender_rate === 8) {
+            notes.push('All female - must breed with Ditto or compatible male from same egg group.');
+        }
+        breedingHtml = `
+            <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+                <h4 class="font-semibold mb-2">Breeding Strategy</h4>
+                <ul class="text-sm space-y-1 list-disc list-inside text-gray-600">
+                    <li>Breed with Pokémon from the same egg group</li>
+                    <li>Use Ditto for easier breeding${species.gender_rate !== -1 ? ' (works with any gender)' : ''}</li>
+                    <li>Hold Everstone to pass down nature</li>
+                    <li>Hold Destiny Knot to pass down 5 IVs</li>
+                </ul>
+                ${notes.length ? `<p class="mt-2 text-sm text-blue-600">${notes.join('<br>')}</p>` : ''}
+            </div>
+        `;
+    }
+    
     const html = `
         <div class="pokemon-card">
             <div class="pokemon-card-header">
@@ -113,14 +134,14 @@ function displayOverview(data) {
                 </div>
                 ${genus ? `<p class="text-lg text-gray-600 mt-1">${genus.genus}</p>` : ''}
             </div>
-          
+        
             <div class="grid md:grid-cols-2 gap-6">
                 <div>
                     <img src="${pokemon.sprites.other['official-artwork'].front_default || pokemon.sprites.front_default}"
                          alt="${pokemon.name}"
                          class="w-full max-w-xs mx-auto">
                 </div>
-              
+            
                 <div class="space-y-4">
                     <div>
                         <h3 class="font-semibold mb-2">Types</h3>
@@ -130,7 +151,7 @@ function displayOverview(data) {
                             `).join('')}
                         </div>
                     </div>
-                  
+                
                     <div>
                         <h3 class="font-semibold mb-2">Physical Traits</h3>
                         <div class="grid grid-cols-2 gap-2 text-sm">
@@ -139,7 +160,7 @@ function displayOverview(data) {
                             <div>Base Experience: ${pokemon.base_experience}</div>
                         </div>
                     </div>
-                  
+                
                     ${description ? `
                         <div>
                             <h3 class="font-semibold mb-2">Description</h3>
@@ -149,7 +170,7 @@ function displayOverview(data) {
                 </div>
             </div>
         </div>
-      
+    
         <div class="pokemon-card">
             <div class="pokemon-card-header">
                 <h3 class="text-xl font-bold">Base Stats</h3>
@@ -172,7 +193,7 @@ function displayOverview(data) {
                 </div>
             </div>
         </div>
-      
+    
         <div class="pokemon-card">
             <div class="pokemon-card-header">
                 <h3 class="text-xl font-bold">Abilities</h3>
@@ -193,12 +214,12 @@ function displayOverview(data) {
                 }).join('')}
             </div>
         </div>
-      
+    
         <div class="pokemon-card">
             <div class="pokemon-card-header">
                 <h3 class="text-xl font-bold">Breeding Information</h3>
             </div>
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <h4 class="font-semibold mb-2">Egg Groups</h4>
                     <div class="flex flex-wrap gap-2">
@@ -219,17 +240,9 @@ function displayOverview(data) {
                     <p class="text-sm">${species.hatch_counter * 255} steps</p>
                 </div>
             </div>
-            <div class="mt-4 p-4 bg-gray-50 rounded-lg">
-                <h4 class="font-semibold mb-2">Breeding Strategy</h4>
-                <ul class="text-sm space-y-1 list-disc list-inside text-gray-600">
-                    <li>Breed with Pokémon from the same egg group</li>
-                    <li>Use Ditto for easier breeding (works with any Pokémon)</li>
-                    <li>Hold Everstone to pass down nature</li>
-                    <li>Hold Destiny Knot to pass down 5 IVs</li>
-                </ul>
-            </div>
+            ${breedingHtml}
         </div>
-      
+    
         <div class="pokemon-card">
             <div class="pokemon-card-header">
                 <h3 class="text-xl font-bold">Battle Strategy</h3>
@@ -242,7 +255,6 @@ function displayOverview(data) {
             </ul>
         </div>
     `;
-  
     overviewTab.innerHTML = html;
 }
 function displayEvolution(data) {
@@ -317,13 +329,13 @@ function displayEvolution(data) {
             -moz-transition: all 0.5s;
         }
         .tree li .node:hover, .tree li .node:hover+ul li .node {
-            background: #c8e4f8; color: #000; 
+            background: #c8e4f8; color: #000;
         }
-        .tree li .node:hover+ul li::after, 
-        .tree li .node:hover+ul li::before, 
-        .tree li .node:hover+ul::before, 
+        .tree li .node:hover+ul li::after,
+        .tree li .node:hover+ul li::before,
+        .tree li .node:hover+ul::before,
         .tree li .node:hover+ul ul::before{
-            border-color:  #94a0b4;
+            border-color: #94a0b4;
         }
         .tree .evolution-method {
             display: block;
@@ -362,9 +374,14 @@ function displayEvolution(data) {
             justify-content: center;
             margin-top: 4px;
         }
+        @media (max-width: 640px) {
+            .tree li { padding: 10px 2px 0 2px; }
+            .tree .node img { width: 60px; height: 60px; }
+            .tree .node { padding: 5px; font-size: 12px; }
+            .tree .evolution-method { font-size: 0.65rem; max-width: 120px; }
+        }
     `;
     const { evolutionChain, allForms } = data;
-  
     const html = `
         <style>${treeCSS}</style>
         <div class="pokemon-card">
@@ -375,7 +392,7 @@ function displayEvolution(data) {
                 <div class="text-center text-gray-500">Loading evolution data...</div>
             </div>
         </div>
-      
+    
         ${allForms.length > 1 ? `
             <div class="pokemon-card">
                 <div class="pokemon-card-header">
@@ -399,15 +416,12 @@ function displayEvolution(data) {
             </div>
         ` : ''}
     `;
-  
     evolutionTab.innerHTML = html;
-  
     // Load evolution chain data asynchronously
     loadEvolutionChainData(evolutionChain.chain);
 }
 async function loadEvolutionChainData(chain) {
     const container = document.getElementById('evolutionChainContainer');
-  
     try {
         const speciesNames = getAllSpecies(chain);
         const pokemonResponses = await Promise.all(
@@ -415,7 +429,7 @@ async function loadEvolutionChainData(chain) {
         );
         const pokemonData = await Promise.all(pokemonResponses.map(r => r.json()));
         const pokemonMap = new Map(pokemonData.map(p => [p.name.toLowerCase(), p]));
-      
+    
         const html = buildEvolutionHTML(chain, pokemonMap);
         container.innerHTML = `<div class="tree"><ul>${html}</ul></div>`;
     } catch (error) {
@@ -426,7 +440,6 @@ function buildEvolutionHTML(node, pokemonMap, method = '') {
     const name = node.species.name.toLowerCase();
     const pokemon = pokemonMap.get(name);
     if (!pokemon) return '';
-  
     const nodeHtml = `
         ${method ? `<span class="evolution-method">${method}</span>` : ''}
         <div class="node">
@@ -441,12 +454,10 @@ function buildEvolutionHTML(node, pokemonMap, method = '') {
             </div>
         </div>
     `;
-  
     const childrenHtml = node.evolves_to.map(child => {
         const childMethod = getEvolutionMethod(child.evolution_details);
         return buildEvolutionHTML(child, pokemonMap, childMethod);
     }).join('');
-  
     return `
         <li>
             ${nodeHtml}
@@ -456,26 +467,24 @@ function buildEvolutionHTML(node, pokemonMap, method = '') {
 }
 function displayGallery(data) {
     const { pokemon, allForms } = data;
-  
     const sprites = getAllSprites(pokemon);
     const officialSprites = sprites.filter(s => s.category === 'official');
     const shinySprites = sprites.filter(s => s.category === 'shiny');
     const gameSprites = sprites.filter(s => s.category === 'game' || s.category === 'home');
-  
     const html = `
         <div class="pokemon-card">
             <div class="pokemon-card-header">
                 <h3 class="text-xl font-bold">Visual Gallery</h3>
                 <p class="text-sm text-gray-600">All available sprites, artwork, and visual variants</p>
             </div>
-          
+        
             <div class="mb-6">
                 <div class="flex gap-2 mb-4 border-b">
                     <button class="gallery-tab active px-4 py-2 font-medium" data-gallery="official">Official Art</button>
-                    <button class="gallery-tab px-4 py-2 font-medium" data-gallery="shiny">Shiny Variants</button>
                     <button class="gallery-tab px-4 py-2 font-medium" data-gallery="game">Game Sprites</button>
+                    <button class="gallery-tab px-4 py-2 font-medium" data-gallery="shiny">Shiny Variants</button>
                 </div>
-              
+            
                 <div id="galleryOfficial" class="gallery-content">
                     <div class="sprite-grid">
                         ${officialSprites.map(sprite => `
@@ -486,7 +495,7 @@ function displayGallery(data) {
                         `).join('')}
                     </div>
                 </div>
-              
+            
                 <div id="galleryShiny" class="gallery-content hidden">
                     <div class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                         <p class="text-sm text-yellow-800">
@@ -504,9 +513,9 @@ function displayGallery(data) {
                         `).join('')}
                     </div>
                 </div>
-              
+            
                 <div id="galleryGame" class="gallery-content hidden">
-                    <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                         ${gameSprites.map(sprite => `
                             <div class="border rounded-lg p-2 bg-gray-50">
                                 <img src="${sprite.url}" alt="${sprite.label}" class="w-full h-24 object-contain">
@@ -516,7 +525,7 @@ function displayGallery(data) {
                     </div>
                 </div>
             </div>
-          
+        
             ${allForms.length > 1 ? `
                 <div class="mt-8">
                     <h3 class="text-lg font-semibold mb-4">All Forms Gallery</h3>
@@ -539,29 +548,25 @@ function displayGallery(data) {
             ` : ''}
         </div>
     `;
-  
     galleryTab.innerHTML = html;
-  
     // Add gallery tab switching
     const galleryTabs = galleryTab.querySelectorAll('.gallery-tab');
     galleryTabs.forEach(tab => {
         tab.addEventListener('click', () => {
             const galleryType = tab.getAttribute('data-gallery');
-          
+        
             galleryTabs.forEach(t => t.classList.remove('active', 'border-b-2', 'border-blue-600', 'text-blue-600'));
             tab.classList.add('active', 'border-b-2', 'border-blue-600', 'text-blue-600');
-          
+        
             galleryTab.querySelectorAll('.gallery-content').forEach(c => c.classList.add('hidden'));
             document.getElementById(`gallery${galleryType.charAt(0).toUpperCase() + galleryType.slice(1)}`).classList.remove('hidden');
         });
     });
-  
     // Set initial active state
     galleryTabs[0].classList.add('border-b-2', 'border-blue-600', 'text-blue-600');
 }
 function displayCards(data) {
     const { cards } = data;
-  
     if (cards.length === 0) {
         cardsTab.innerHTML = `
             <div class="pokemon-card">
@@ -573,12 +578,10 @@ function displayCards(data) {
         `;
         return;
     }
-  
     const cardsWithPrices = cards.map(card => ({
         ...card,
         price: getCardPrice(card)
     })).sort((a, b) => b.price - a.price);
-  
     const html = `
         <div class="pokemon-card">
             <div class="pokemon-card-header flex items-center justify-between">
@@ -617,9 +620,7 @@ function displayCards(data) {
             </div>
         </div>
     `;
-  
     cardsTab.innerHTML = html;
-  
     // Add sort functionality
     document.getElementById('cardSort').addEventListener('change', (e) => {
         sortCards(cardsWithPrices, e.target.value);
@@ -627,7 +628,6 @@ function displayCards(data) {
 }
 function sortCards(cards, sortBy) {
     let sorted = [...cards];
-  
     switch (sortBy) {
         case 'price-high':
             sorted.sort((a, b) => b.price - a.price);
@@ -642,7 +642,6 @@ function sortCards(cards, sortBy) {
             sorted.sort((a, b) => new Date(a.set.releaseDate) - new Date(b.set.releaseDate));
             break;
     }
-  
     const cardGrid = document.getElementById('cardGrid');
     cardGrid.innerHTML = sorted.map(card => `
         <div class="tcg-card">
@@ -668,21 +667,17 @@ function sortCards(cards, sortBy) {
 // Helper Functions
 function getAllSpecies(chain) {
     const species = new Set();
-  
     function traverse(node) {
         species.add(node.species.name.toLowerCase());
         node.evolves_to.forEach(traverse);
     }
-  
     traverse(chain);
     return Array.from(species);
 }
 function getEvolutionMethod(details) {
     if (!details || details.length === 0) return '';
-  
     const detail = details[0];
     const methods = [];
-  
     if (detail.min_level) methods.push(`Level ${detail.min_level}`);
     if (detail.item) methods.push(`Use ${detail.item.name.replace('-', ' ')}`);
     if (detail.held_item) methods.push(`Hold ${detail.held_item.name.replace('-', ' ')}`);
@@ -693,12 +688,10 @@ function getEvolutionMethod(details) {
     if (detail.location) methods.push(`At ${detail.location.name.replace('-', ' ')}`);
     if (detail.trade_species) methods.push(`Trade for ${detail.trade_species.name}`);
     if (detail.trigger.name === 'trade') methods.push('Trade');
-  
     return methods.join(', ') || 'Unknown method';
 }
 function getAllSprites(pokemon) {
     const sprites = [];
-  
     // Official artwork
     if (pokemon.sprites.other['official-artwork'].front_default) {
         sprites.push({ url: pokemon.sprites.other['official-artwork'].front_default, label: 'Official Artwork', category: 'official' });
@@ -706,7 +699,6 @@ function getAllSprites(pokemon) {
     if (pokemon.sprites.other['official-artwork'].front_shiny) {
         sprites.push({ url: pokemon.sprites.other['official-artwork'].front_shiny, label: 'Official Artwork (Shiny)', category: 'shiny' });
     }
-  
     // Home sprites
     if (pokemon.sprites.other.home.front_default) {
         sprites.push({ url: pokemon.sprites.other.home.front_default, label: 'Home (Default)', category: 'home' });
@@ -720,12 +712,10 @@ function getAllSprites(pokemon) {
     if (pokemon.sprites.other.home.front_shiny_female) {
         sprites.push({ url: pokemon.sprites.other.home.front_shiny_female, label: 'Home (Shiny Female)', category: 'shiny' });
     }
-  
     // Dream World
     if (pokemon.sprites.other.dream_world.front_default) {
         sprites.push({ url: pokemon.sprites.other.dream_world.front_default, label: 'Dream World', category: 'official' });
     }
-  
     // Game sprites
     const gameSprites = [
         { url: pokemon.sprites.front_default, label: 'Front (Default)', category: 'game' },
@@ -737,11 +727,9 @@ function getAllSprites(pokemon) {
         { url: pokemon.sprites.back_female, label: 'Back (Female)', category: 'game' },
         { url: pokemon.sprites.back_shiny_female, label: 'Back (Shiny Female)', category: 'shiny' }
     ];
-  
     gameSprites.forEach(sprite => {
         if (sprite.url) sprites.push(sprite);
     });
-  
     // Showdown sprites
     if (pokemon.sprites.other.showdown?.front_default) {
         sprites.push({ url: pokemon.sprites.other.showdown.front_default, label: 'Showdown (Front)', category: 'game' });
@@ -755,18 +743,15 @@ function getAllSprites(pokemon) {
     if (pokemon.sprites.other.showdown?.back_shiny) {
         sprites.push({ url: pokemon.sprites.other.showdown.back_shiny, label: 'Showdown (Back Shiny)', category: 'shiny' });
     }
-  
     return sprites;
 }
 function getCardPrice(card) {
     const tcgPrice = card.tcgplayer?.prices?.holofoil?.market ||
                      card.tcgplayer?.prices?.reverseHolofoil?.market ||
                      card.tcgplayer?.prices?.normal?.market;
-  
     const cardmarketPrice = card.cardmarket?.prices?.averageSellPrice ||
                            card.cardmarket?.prices?.avg30 ||
                            card.cardmarket?.prices?.avg7;
-  
     return tcgPrice || cardmarketPrice || 0;
 }
 // UI State Functions
@@ -799,7 +784,6 @@ async function switchTab(tabName) {
             btn.classList.remove('active');
         }
     });
-  
     // Update content visibility
     const tabs = {
         overview: overviewTab,
@@ -807,7 +791,6 @@ async function switchTab(tabName) {
         gallery: galleryTab,
         cards: cardsTab
     };
-  
     Object.keys(tabs).forEach(key => {
         if (key === tabName) {
             tabs[key].classList.remove('hidden');
@@ -817,7 +800,6 @@ async function switchTab(tabName) {
             tabs[key].classList.remove('active');
         }
     });
-
     if (tabName === 'cards' && !currentPokemonData.cards) {
         cardsTab.innerHTML = `
             <div class="pokemon-card">
@@ -827,7 +809,6 @@ async function switchTab(tabName) {
                 <p class="text-gray-500 text-center py-8">Loading cards...</p>
             </div>
         `;
-
         try {
             const name = currentPokemonData.pokemon.name;
             const cardsResponse = await fetch(`${TCG_API_BASE}/cards?q=name:"${name}"`);
