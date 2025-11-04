@@ -240,7 +240,8 @@ function displayOverview(data) {
     if (species.is_mythical) rarity = 'Mythical';
     else if (species.is_legendary) rarity = 'Legendary';
     else if (species.is_baby) rarity = 'Baby';
-   
+
+    // --- Breeding Information ---
     let breedingHtml = '';
     if (species.egg_groups.some(g => g.name === 'undiscovered' || g.name === 'no-eggs')) {
         breedingHtml = '<p class="text-red-600 text-sm">This Pokémon cannot breed.</p>';
@@ -262,7 +263,7 @@ function displayOverview(data) {
                 </ul>
             </details>
         ` : '<p class="text-sm text-gray-600">No other compatible Pokémon found in egg groups.</p>';
-   
+
         breedingHtml = `
             <div class="mt-4 p-4 bg-gray-50 rounded-lg">
                 <h4 class="font-semibold mb-2">Breeding Strategy</h4>
@@ -277,8 +278,8 @@ function displayOverview(data) {
             </div>
         `;
     }
-   
-    // Compute defensive type matchups
+
+    // --- Defensive Matchups ---
     let damageMap = {};
     allTypes.forEach(attType => {
         let multi = 1;
@@ -292,11 +293,12 @@ function displayOverview(data) {
     const weaknesses = Object.entries(damageMap).filter(([t, m]) => m > 1).map(([t, m]) => `${capitalize(t)} (${m}x)`);
     const resistances = Object.entries(damageMap).filter(([t, m]) => m > 0 && m < 1).map(([t, m]) => `${capitalize(t)} (${m}x)`);
     const immunities = Object.entries(damageMap).filter(([t, m]) => m === 0).map(([t, m]) => capitalize(t));
-   
+
     const defensiveHtml = `
         <div class="pokemon-card">
-            <div class="pokemon-card-header">
+            <div class="pokemon-card-header flex justify-between items-center">
                 <h3 class="text-xl font-bold">Defensive Matchups</h3>
+                <img src="${pokemon.sprites.front_default}" alt="${pokemon.name} icon" class="w-16 h-16" style="image-rendering: pixelated;">
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
@@ -326,12 +328,12 @@ function displayOverview(data) {
             </div>
         </div>
     `;
-   
-    // Compute offensive type matchups
+
+    // --- Offensive Matchups ---
     const superEffective = [...new Set(typeDetails.flatMap(td => td.damage_relations.double_damage_to.map(t => t.name)))].sort();
     const notVeryEffective = [...new Set(typeDetails.flatMap(td => td.damage_relations.half_damage_to.map(t => t.name)))].sort();
     const noEffect = [...new Set(typeDetails.flatMap(td => td.damage_relations.no_damage_to.map(t => t.name)))].sort();
-   
+
     const offensiveHtml = `
         <div class="pokemon-card">
             <div class="pokemon-card-header">
@@ -360,14 +362,15 @@ function displayOverview(data) {
         </div>
     `;
 
+    // --- Locations ---
     const uniqueAreas = [...new Set(encounters.map(e => e.location_area.name))];
     const foundIn = uniqueAreas.map(area => {
         let formatted = area.replace(/-/g, ' ').replace('area', 'Area');
         return formatted.split(' ').map(w => capitalize(w)).join(', ');
     }).join('');
-
     const habitat = species.habitat ? capitalize(species.habitat.name) : 'Unknown';
-   
+
+    // --- Main Overview HTML ---
     let html = `
         <div class="pokemon-card">
             <div class="pokemon-card-header">
@@ -393,12 +396,9 @@ function displayOverview(data) {
                     <div>
                         <h3 class="font-semibold mb-2">Types</h3>
                         <div class="flex gap-2">
-                            ${pokemon.types.map(t => `
-                                <span class="type-badge type-${t.type.name}">${t.type.name}</span>
-                            `).join('')}
+                            ${pokemon.types.map(t => `<span class="type-badge type-${t.type.name}">${t.type.name}</span>`).join('')}
                         </div>
                     </div>
-               
                     <div>
                         <h3 class="font-semibold mb-2">Physical Traits</h3>
                         <div class="grid grid-cols-2 gap-2 text-sm">
@@ -416,29 +416,23 @@ function displayOverview(data) {
                             <div>Rarity: ${rarity}</div>
                         </div>
                     </div>
-
                     <div>
                         <h3 class="font-semibold mb-2">Found In</h3>
                         <p class="text-gray-600 text-sm">${foundIn || 'Not found in the wild'}</p>
                     </div>
-               
-                    ${description ? `
-                        <div>
-                            <h3 class="font-semibold mb-2">Description</h3>
-                            <p class="text-gray-600 text-sm">${description.flavor_text.replace(/[\f\n]/g,' ').replace(/\b([A-ZÀ-ÖØ-Ý]{2,}[A-ZÀ-ÖØ-Ýa-zà-ÿ'’]*)\b/g,w=>w.charAt(0)+w.slice(1).toLowerCase())}</p>
-                        </div>
-                    ` : ''}
+                    ${description ? `<div><h3 class="font-semibold mb-2">Description</h3>
+                        <p class="text-gray-600 text-sm">${description.flavor_text.replace(/[\f\n]/g,' ').replace(/\b([A-ZÀ-ÖØ-Ý]{2,}[A-ZÀ-ÖØ-Ýa-zà-ÿ'’]*)\b/g,w=>w.charAt(0)+w.slice(1).toLowerCase())}</p>
+                    </div>` : ''}
                 </div>
             </div>
         </div>
-   
+
         <div class="pokemon-card">
             <div class="pokemon-card-header">
                 <h3 class="text-xl font-bold">Base Stats</h3>
             </div>
             <div class="space-y-3">
-                ${pokemon.stats.map(stat => `
-                    <div>
+                ${pokemon.stats.map(stat => `<div>
                         <div class="flex justify-between text-sm mb-1">
                             <span class="capitalize font-medium">${stat.stat.name.replace('-', ' ')}</span>
                             <span class="font-bold">${stat.base_stat}</span>
@@ -446,47 +440,44 @@ function displayOverview(data) {
                         <div class="stat-bar">
                             <div class="stat-bar-fill" style="width: ${(stat.base_stat / 255) * 100}%"></div>
                         </div>
-                    </div>
-                `).join('')}
+                    </div>`).join('')}
                 <div class="pt-2 border-t flex justify-between font-bold">
                     <span>Total</span>
                     <span>${totalStats}</span>
                 </div>
             </div>
         </div>
-   
+
         <div class="pokemon-card">
-            <div class="pokemon-card-header">
+            <div class="pokemon-card-header flex justify-between items-center">
                 <h3 class="text-xl font-bold">Abilities</h3>
+                <img src="${pokemon.sprites.front_default}" alt="${pokemon.name} icon" class="w-16 h-16" style="image-rendering: pixelated;">
             </div>
             <div class="space-y-4">
                 ${pokemon.abilities.map((ability, idx) => {
                     const detail = abilityDetails[idx];
                     const effect = detail?.effect_entries.find(e => e.language.name === 'en');
-                    return `
-                        <div class="border rounded-lg p-4">
-                            <div class="flex items-center gap-2 mb-2">
-                                <h4 class="font-semibold capitalize">${ability.ability.name.replace('-', ' ')}</h4>
-                                ${ability.is_hidden ? '<span class="badge badge-secondary text-xs">Hidden</span>' : ''}
-                            </div>
-                            ${effect ? `<p class="text-sm text-gray-600">${effect.short_effect}</p>` : ''}
+                    return `<div class="border rounded-lg p-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <h4 class="font-semibold capitalize">${ability.ability.name.replace('-', ' ')}</h4>
+                            ${ability.is_hidden ? '<span class="badge badge-secondary text-xs">Hidden</span>' : ''}
                         </div>
-                    `;
+                        ${effect ? `<p class="text-sm text-gray-600">${effect.short_effect}</p>` : ''}
+                    </div>`;
                 }).join('')}
             </div>
         </div>
-   
+
         <div class="pokemon-card">
-            <div class="pokemon-card-header">
+            <div class="pokemon-card-header flex justify-between items-center">
                 <h3 class="text-xl font-bold">Breeding Information</h3>
+                <img src="${pokemon.sprites.front_default}" alt="${pokemon.name} icon" class="w-16 h-16" style="image-rendering: pixelated;">
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <h4 class="font-semibold mb-2">Egg Groups</h4>
                     <div class="flex flex-wrap gap-2">
-                        ${species.egg_groups.map(group => `
-                            <span class="badge badge-outline capitalize">${group.name.replace('-', ' ')}</span>
-                        `).join('')}
+                        ${species.egg_groups.map(group => `<span class="badge badge-outline capitalize">${group.name.replace('-', ' ')}</span>`).join('')}
                     </div>
                 </div>
                 <div>
@@ -503,10 +494,11 @@ function displayOverview(data) {
             </div>
             ${breedingHtml}
         </div>
-   
+
         <div class="pokemon-card">
-            <div class="pokemon-card-header">
+            <div class="pokemon-card-header flex justify-between items-center">
                 <h3 class="text-xl font-bold">Battle Strategy</h3>
+                <img src="${pokemon.sprites.front_default}" alt="${pokemon.name} icon" class="w-16 h-16" style="image-rendering: pixelated;">
             </div>
             <ul class="text-sm space-y-2 list-disc list-inside text-gray-600">
                 <li><strong>Role:</strong> ${pokemon.stats[1].base_stat > pokemon.stats[3].base_stat ? 'Physical' : 'Special'} Attacker</li>
@@ -515,20 +507,22 @@ function displayOverview(data) {
                 <li><strong>Primary Ability:</strong> ${capitalize(pokemon.abilities[0].ability.name.replace('-', ' '))}</li>
             </ul>
         </div>
-   
+
         ${defensiveHtml}
         ${offensiveHtml}
     `;
-    // Append moves section
+
+    // --- Moves Section ---
     html += `
         <div class="pokemon-card">
-            <div class="pokemon-card-header">
+            <div class="pokemon-card-header flex justify-between items-center">
                 <h3 class="text-xl font-bold">Moves</h3>
+                <img src="${pokemon.sprites.front_default}" alt="${pokemon.name} icon" class="w-16 h-16" style="image-rendering: pixelated;">
             </div>
-            <div id="movesList" class="space-y-2">
-            </div>
+            <div id="movesList" class="space-y-2"></div>
         </div>
     `;
+
     overviewTab.innerHTML = html;
 
     const playLegacyCry = document.getElementById('playLegacyCry');
@@ -542,15 +536,14 @@ function displayOverview(data) {
         const latestB = b.learn[b.learn.length - 1];
         const levelA = latestA.move_learn_method.name === 'level-up' ? latestA.level_learned_at : Infinity;
         const levelB = latestB.move_learn_method.name === 'level-up' ? latestB.level_learned_at : Infinity;
-        if (levelA !== levelB) {
-            return levelA - levelB;
-        }
+        if (levelA !== levelB) return levelA - levelB;
         return a.move.name.localeCompare(b.move.name);
     });
 
     // Render first page of moves
     renderMoves(1);
 }
+
 
 function renderMoves(page) {
     const moves = currentPokemonData.moves;
