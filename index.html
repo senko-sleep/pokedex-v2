@@ -3,28 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pokedex</title>
+  <title>Pokédex</title>
   <meta name="description" content="Comprehensive Pokémon guide with stats, evolution chains, visual galleries, and trading cards." />
-
   <!-- Poké Ball Tab Icon -->
   <link rel="icon" type="image/png" href="https://upload.wikimedia.org/wikipedia/commons/5/53/Poké_Ball_icon.svg" />
-
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-
   <!-- Custom Styles -->
   <link rel="stylesheet" href="src/css/style.css" />
 </head>
 <body class="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 text-gray-800">
   <div class="container mx-auto px-4 py-8">
-    
+   
     <!-- Header -->
     <header class="text-center mb-8">
       <h1 class="text-5xl font-semibold text-red-400 drop-shadow-[1px_1px_0_#00000033] mb-2">
-        Pokédex
+        
       </h1>
     </header>
-
     <!-- Search Section -->
     <section class="w-full max-w-2xl mx-auto mb-8">
       <form id="searchForm" class="flex gap-2">
@@ -51,13 +47,11 @@
         Try: pikachu, charizard, mewtwo, eevee, lucario, greninja
       </p>
     </section>
-
     <!-- Loading State -->
     <div id="loadingState" class="hidden flex items-center justify-center py-16">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       <span class="ml-4 text-lg text-gray-600">Loading Pokémon data...</span>
     </div>
-
     <!-- Error State -->
     <div id="errorState" class="hidden max-w-2xl mx-auto">
       <div class="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
@@ -69,16 +63,14 @@
         <p id="errorMessage" class="text-red-800"></p>
       </div>
     </div>
-
     <!-- Empty State -->
     <div id="emptyState" class="text-center py-16">
-      <div class="text-6xl mb-4">🔍</div>
+      <div class="text-6xl mb-4">Pokedex</div>
       <p class="text-xl text-gray-600">Search for a Pokémon to get started!</p>
       <p class="text-sm text-gray-500 mt-2">
         (Zoom out to 90% for best experience) Try searching for Pikachu, Charizard, or Mewtwo.
       </p>
     </div>
-
     <!-- Results Section -->
     <section id="resultsSection" class="hidden">
       <!-- Tabs -->
@@ -87,10 +79,8 @@
           <button class="tab-button active" data-tab="overview">Overview</button>
           <button class="tab-button" data-tab="evolution">Evolution</button>
           <button class="tab-button" data-tab="gallery">Gallery</button>
-          <button class="tab-button" data-tab="cards">Cards <span id="cardCount" class="ml-1"></span></button>
-        </div>
+          <button class="tab-button" data-tab="cards">Cards <span id="cardCount" class="ml-1"></span></button> </div>
       </div>
-
       <!-- Tab Content -->
       <div id="tabContent">
         <div id="overviewTab" class="tab-content active"></div>
@@ -100,7 +90,6 @@
       </div>
     </section>
   </div>
-
   <!-- Script -->
   <script src="src/js/script.js"></script>
 </body>

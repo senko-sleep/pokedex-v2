@@ -1,23 +1,19 @@
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 0.625rem;
+    height: 0.625rem;
 }
-
 ::-webkit-scrollbar-track {
     background: #f1f1f1;
-    border-radius: 5px;
+    border-radius: 0.3125rem;
 }
-
 ::-webkit-scrollbar-thumb {
     background: #888;
-    border-radius: 5px;
+    border-radius: 0.3125rem;
 }
-
 ::-webkit-scrollbar-thumb:hover {
     background: #555;
 }
-
 /* Tab Buttons */
 .tab-button {
     padding: 0.75rem 1.5rem;
@@ -27,22 +23,18 @@
     color: #6b7280;
     background: transparent;
 }
-
 .tab-button:hover {
     background: #f3f4f6;
     color: #374151;
 }
-
 .tab-button.active {
     background: #3b82f6;
     color: white;
 }
-
 /* Tab Content */
 .tab-content {
     animation: fadeIn 0.3s ease-in;
 }
-
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -53,7 +45,6 @@
         transform: translateY(0);
     }
 }
-
 /* Card Styles */
 .pokemon-card {
     background: white;
@@ -62,19 +53,16 @@
     padding: 1.5rem;
     margin-bottom: 1.5rem;
 }
-
 .pokemon-card-header {
     border-bottom: 1px solid #e5e7eb;
     padding-bottom: 1rem;
     margin-bottom: 1rem;
 }
-
 .pokemon-card-title {
     font-size: 1.5rem;
     font-weight: 700;
     color: #111827;
 }
-
 /* Type Badges */
 .type-badge {
     display: inline-block;
@@ -85,7 +73,6 @@
     text-transform: uppercase;
     color: white;
 }
-
 .type-normal { background-color: #a8a878; }
 .type-fire { background-color: #f08030; }
 .type-water { background-color: #6890f0; }
@@ -104,7 +91,6 @@
 .type-dark { background-color: #705848; }
 .type-steel { background-color: #b8b8d0; }
 .type-fairy { background-color: #ee99ac; }
-
 /* Progress Bar */
 .stat-bar {
     height: 0.5rem;
@@ -112,13 +98,11 @@
     border-radius: 0.25rem;
     overflow: hidden;
 }
-
 .stat-bar-fill {
     height: 100%;
     background: linear-gradient(to right, #3b82f6, #8b5cf6);
     transition: width 0.3s ease;
 }
-
 /* Badge Styles */
 .badge {
     display: inline-block;
@@ -127,25 +111,21 @@
     font-size: 0.75rem;
     font-weight: 500;
 }
-
 .badge-secondary {
     background-color: #f3f4f6;
     color: #374151;
 }
-
 .badge-outline {
     border: 1px solid #d1d5db;
     background-color: transparent;
     color: #6b7280;
 }
-
 /* Card Grid */
 .card-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 1rem;
 }
-
 .tcg-card {
     border: 1px solid #e5e7eb;
     border-radius: 0.5rem;
@@ -153,17 +133,14 @@
     transition: all 0.2s;
     background: white;
 }
-
 .tcg-card:hover {
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     transform: translateY(-2px);
 }
-
 .tcg-card img {
     width: 100%;
     height: auto;
 }
-
 /* Rarity Colors */
 .rarity-common { background-color: #6b7280; }
 .rarity-uncommon { background-color: #10b981; }
@@ -172,14 +149,12 @@
 .rarity-rare-ultra { background-color: #ec4899; }
 .rarity-rare-secret { background-color: #eab308; }
 .rarity-rare-rainbow { background: linear-gradient(to right, #ef4444, #eab308, #3b82f6); }
-
 /* Sprite Gallery */
 .sprite-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 1rem;
 }
-
 .sprite-item {
     border: 1px solid #e5e7eb;
     border-radius: 0.5rem;
@@ -187,13 +162,11 @@
     text-align: center;
     background: white;
 }
-
 .sprite-item img {
     width: 100%;
     height: 160px;
     object-fit: contain;
 }
-
 /* Evolution Chain */
 .evolution-chain {
     display: flex;
@@ -202,50 +175,193 @@
     justify-content: center;
     gap: 1rem;
 }
-
 .evolution-stage {
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
 }
-
 .evolution-stage img {
     width: 128px;
     height: 128px;
     object-fit: contain;
 }
-
 .evolution-arrow {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 0.5rem;
 }
-
 /* Responsive Design */
 @media (max-width: 768px) {
     .card-grid {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     }
-    
+   
     .sprite-grid {
         grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     }
-    
+   
     .evolution-chain {
         flex-direction: column;
     }
 }
-
 /* Loading Animation */
 @keyframes spin {
     to {
         transform: rotate(360deg);
     }
 }
-
 .animate-spin {
     animation: spin 1s linear infinite;
 }
-
+/* Moveset Styles (Improved for Consistency) */
+.moves-list {
+    max-height: 37.5rem; /* 600px */
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem; /* 2px */
+    margin-bottom: 1.5rem; /* Match card margins */
+}
+.move-item {
+    background: white; /* Match pokemon-card */
+    border: 1px solid #e5e7eb; /* Consistent border */
+    border-radius: 0.5rem; /* Match tab and card radii */
+    transition: all 0.2s ease; /* Match transitions */
+    cursor: pointer;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); /* Add subtle shadow like cards */
+}
+.move-item:hover {
+    background: #f3f4f6; /* Match hover backgrounds */
+    border-color: #3b82f6; /* Accent color */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); /* Enhanced hover shadow */
+    transform: translateY(-2px); /* Add lift like tcg-card */
+}
+.move-header {
+    display: grid;
+    grid-template-columns: 5rem 1fr auto auto auto auto; /* 80px ~5rem */
+    align-items: center;
+    padding: 0.875rem 1.125rem; /* 14px 18px */
+    gap: 1rem; /* 16px */
+}
+.move-name {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #111827; /* Primary text */
+}
+.move-level {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #6b7280; /* Secondary text */
+    text-align: center;
+}
+.move-type-badge {
+    padding: 0.375rem 0.875rem; /* 6px 14px */
+    border-radius: 0.375rem; /* Match type-badge */
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03125rem; /* 0.5px */
+    display: flex;
+    align-items: center;
+    gap: 0.25rem; /* 4px */
+    min-width: 5.625rem; /* 90px */
+    justify-content: center;
+    color: white; /* Match type-badge */
+}
+/* Reuse existing type classes for move-type-badge backgrounds, e.g., .type-fire */
+.move-category {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem; /* 4px */
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #6b7280; /* Muted text */
+    min-width: 5rem; /* 80px */
+}
+/* Add category-specific styles for better visual distinction */
+.move-category.physical {
+    color: #c03028; /* Fighting color for physical */
+}
+.move-category.special {
+    color: #f85888; /* Psychic color for special */
+}
+.move-category.status {
+    color: #a8a878; /* Normal for status */
+}
+.move-power,
+.move-accuracy {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #111827; /* Primary */
+    text-align: center;
+    min-width: 3.75rem; /* 60px */
+}
+.move-details {
+    display: none;
+    padding: 0 1.125rem 1.125rem 1.125rem; /* Consistent */
+    border-top: 1px solid #e5e7eb;
+    margin-top: 0.625rem; /* 10px */
+    animation: slideDown 0.3s ease; /* Match fadeIn duration */
+}
+.move-item.expanded .move-details {
+    display: block;
+}
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.move-description {
+    margin-top: 0.875rem; /* 14px */
+    padding: 0.875rem;
+    background: #f3f4f6; /* Secondary bg */
+    border-radius: 0.625rem; /* Slightly larger for description */
+    color: #111827;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+.move-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr)); /* 120px */
+    gap: 0.75rem; /* 12px */
+    margin-top: 0.875rem; /* 14px */
+}
+.move-stat-box {
+    background: #f3f4f6;
+    padding: 0.625rem 0.875rem; /* 10px 14px */
+    border-radius: 0.5rem; /* Match */
+    text-align: center;
+}
+.move-stat-label {
+    font-size: 0.75rem;
+    color: #6b7280;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 0.25rem; /* 4px */
+}
+.move-stat-value {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #111827;
+}
+/* Responsive adjustments for moveset */
+@media (max-width: 768px) {
+    .move-header {
+        grid-template-columns: 3rem 1fr auto auto; /* Collapse for smaller screens */
+        gap: 0.5rem;
+    }
+    .move-type-badge,
+    .move-category,
+    .move-power,
+    .move-accuracy {
+        min-width: auto;
+        font-size: 0.75rem;
+    }
+}
