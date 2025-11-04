@@ -8,6 +8,7 @@ let currentPokemonData = null;
 let allCards = null;
 let totalPokemon = null;
 const allTypes = ['normal', 'fire', 'water', 'grass', 'electric', 'ice', 'fighting', 'poison', 'ground', 'flying', 'psychic', 'bug', 'rock', 'ghost', 'dragon', 'dark', 'steel', 'fairy'];
+let audioCache = new Map();
 
 // DOM Elements
 const searchForm = document.getElementById('searchForm');
@@ -79,31 +80,35 @@ async function handleRandom() {
     hideResults();
     try {
         if (!totalPokemon) {
-            const countResponse = await fetch(`${POKEAPI_BASE}/pokemon?limit=1`);
-            if (!countResponse.ok) throw new Error('Failed to fetch Pokémon count');
-            const countData = await countResponse.json();
-            totalPokemon = countData.count;
+            const res = await fetch(`${POKEAPI_BASE}/pokemon?limit=1`);
+            if (!res.ok) throw new Error('Failed to fetch Pokémon count');
+            const json = await res.json();
+            totalPokemon = json.count;
         }
-        const randomId = Math.floor(Math.random() * totalPokemon) + 1;
+        let randomId;
+        do {
+            randomId = Math.floor(Math.random() * totalPokemon) + 1;
+        } while (isNaN(randomId) || randomId <= 0);
         const data = await fetchCompletePokemonData(randomId);
+        if (!data || !data.pokemon || !data.pokemon.id) throw new Error('Invalid Pokémon data');
         if (!allCards) {
-            const cardsResponse = await fetch('data/cards.json');
-            if (!cardsResponse.ok) throw new Error('Failed to load cards.json');
-            allCards = await cardsResponse.json();
+            const cardsRes = await fetch('data/cards.json');
+            if (!cardsRes.ok) throw new Error('Failed to load cards.json');
+            allCards = await cardsRes.json();
         }
-        const name = data.pokemon.name.toLowerCase();
-        data.cards = allCards.filter(card => card.name.toLowerCase().includes(name));
+        const name = (data.pokemon.name || '').toLowerCase().trim();
+        data.cards = Array.isArray(allCards) ? allCards.filter(card => card.name && card.name.toLowerCase().includes(name)) : [];
         currentPokemonData = data;
         displayResults(data);
         showResults();
         searchInput.value = data.pokemon.name;
-        //playBeep(880, 200); // Done sound
-    } catch (error) {
-        showError(error.message || 'Failed to fetch random Pokémon data. Please try again.');
+    } catch (e) {
+        showError(e.message || 'Failed to fetch random Pokémon data. Please try again.');
     } finally {
         hideLoading();
     }
 }
+
 
 // API Functions
 async function fetchCompletePokemonData(nameOrId) {
@@ -161,6 +166,10 @@ async function fetchCompletePokemonData(nameOrId) {
             return {move: moveData, learn: m.version_group_details};
         });
         const moves = await Promise.all(movePromises);
+
+        // Fetch encounters
+        const encountersResponse = await fetch(`${POKEAPI_BASE}/pokemon/${pokemon.id}/encounters`);
+        const encounters = await encountersResponse.json();
    
         return {
             pokemon,
@@ -170,7 +179,8 @@ async function fetchCompletePokemonData(nameOrId) {
             allForms,
             compatibleSpecies: Array.from(compatibleSpecies).sort(),
             typeDetails,
-            moves
+            moves,
+            encounters
         };
     } catch (error) {
         throw error;
@@ -186,12 +196,44 @@ function displayResults(data) {
     displayCards(data);
 }
 
+function getGenerationDisplay(genName) {
+    const roman = {
+        'i': 'I',
+        'ii': 'II',
+        'iii': 'III',
+        'iv': 'IV',
+        'v': 'V',
+        'vi': 'VI',
+        'vii': 'VII',
+        'viii': 'VIII',
+        'ix': 'IX'
+    };
+    const regions = {
+        'i': 'Kanto',
+        'ii': 'Johto',
+        'iii': 'Hoenn',
+        'iv': 'Sinnoh',
+        'v': 'Unova',
+        'vi': 'Kalos',
+        'vii': 'Alola',
+        'viii': 'Galar',
+        'ix': 'Paldea'
+    };
+    const num = genName.split('-')[1];
+    return `${roman[num]} (${regions[num]})`;
+}
+
 function displayOverview(data) {
-    const { pokemon, species, abilityDetails, compatibleSpecies, typeDetails, moves } = data;
+    const { pokemon, species, abilityDetails, compatibleSpecies, typeDetails, moves, encounters } = data;
     const description = species.flavor_text_entries.find(e => e.language.name === 'en');
     const genus = species.genera.find(g => g.language.name === 'en');
     const maxStat = Math.max(...pokemon.stats.map(s => s.base_stat));
     const totalStats = pokemon.stats.reduce((sum, s) => sum + s.base_stat, 0);
+
+    let rarity = 'Regular';
+    if (species.is_mythical) rarity = 'Mythical';
+    else if (species.is_legendary) rarity = 'Legendary';
+    else if (species.is_baby) rarity = 'Baby';
    
     let breedingHtml = '';
     if (species.egg_groups.some(g => g.name === 'undiscovered' || g.name === 'no-eggs')) {
@@ -311,6 +353,14 @@ function displayOverview(data) {
             </div>
         </div>
     `;
+
+    const uniqueAreas = [...new Set(encounters.map(e => e.location_area.name))];
+    const foundIn = uniqueAreas.map(area => {
+        let formatted = area.replace(/-/g, ' ').replace('area', 'Area');
+        return formatted.split(' ').map(w => capitalize(w)).join(', ');
+    }).join('');
+
+    const habitat = species.habitat ? capitalize(species.habitat.name) : 'Unknown';
    
     let html = `
         <div class="pokemon-card">
@@ -327,7 +377,10 @@ function displayOverview(data) {
                     <img src="${pokemon.sprites.other['official-artwork'].front_default || pokemon.sprites.front_default}"
                          alt="${pokemon.name}"
                          class="w-full max-w-xs mx-auto">
-                    <button class="mt-2 px-4 py-2 bg-blue-500 text-white rounded" onclick="playCry('${pokemon.cries.latest}')">Play Cry</button>
+                    <div class="flex mt-2">
+                        <button id="playLegacyCry" class="px-4 py-2 border border-black rounded bg-transparent text-black transition hover:bg-gray-200">🔊 Cry</button>
+                        <button id="playLatestCry" class="px-4 py-2 border border-black rounded bg-transparent text-black transition hover:bg-gray-200">🎵 Latest</button>
+                    </div>
                 </div>
            
                 <div class="space-y-4">
@@ -346,13 +399,27 @@ function displayOverview(data) {
                             <div>Height: ${(pokemon.height / 10).toFixed(1)} m</div>
                             <div>Weight: ${(pokemon.weight / 10).toFixed(1)} kg</div>
                             <div>Base Experience: ${pokemon.base_experience}</div>
+                            <div>Generation: ${getGenerationDisplay(species.generation.name)}</div>
+                            <div>Capture Rate: ${species.capture_rate}</div>
+                            <div>Base Happiness: ${species.base_happiness}</div>
+                            <div>Growth Rate: ${capitalize(species.growth_rate.name.replace('-', ' '))}</div>
+                            <div>Hatch Counter: ${species.hatch_counter}</div>
+                            <div>Color: ${capitalize(species.color.name)}</div>
+                            <div>Shape: ${capitalize(species.shape.name)}</div>
+                            <div>Habitat: ${habitat}</div>
+                            <div>Rarity: ${rarity}</div>
                         </div>
+                    </div>
+
+                    <div>
+                        <h3 class="font-semibold mb-2">Found In</h3>
+                        <p class="text-gray-600 text-sm">${foundIn || 'Not found in the wild'}</p>
                     </div>
                
                     ${description ? `
                         <div>
                             <h3 class="font-semibold mb-2">Description</h3>
-                            <p class="text-gray-600 text-sm">${description.flavor_text.replace(/\f/g, ' ')}</p>
+                            <p class="text-gray-600 text-sm">${description.flavor_text.replace(/[\f\n]/g,' ').replace(/\b([A-ZÀ-ÖØ-Ý]{2,}[A-ZÀ-ÖØ-Ýa-zà-ÿ'’]*)\b/g,w=>w.charAt(0)+w.slice(1).toLowerCase())}</p>
                         </div>
                     ` : ''}
                 </div>
@@ -457,6 +524,11 @@ function displayOverview(data) {
         </div>
     `;
     overviewTab.innerHTML = html;
+
+    const playLegacyCry = document.getElementById('playLegacyCry');
+    const playLatestCry = document.getElementById('playLatestCry');
+    if (playLegacyCry) playLegacyCry.addEventListener('click', () => playPokemonCry('legacy'));
+    if (playLatestCry) playLatestCry.addEventListener('click', () => playPokemonCry('latest'));
 
     // Sort moves: level-up by level asc, others after sorted by name
     currentPokemonData.moves.sort((a, b) => {
@@ -1187,11 +1259,28 @@ function playBeep(frequency = 440, duration = 200) {
     setTimeout(() => oscillator.stop(), duration);
 }
 
-function playCry(url) {
-    const audio = new Audio(url);
-    audio.play().catch(error => {
-        console.error('Error playing cry:', error);
-    });
+async function playPokemonCry(type = 'legacy') {
+    if (!currentPokemonData) return;
+    const pokemonId = currentPokemonData.pokemon.id;
+    const cacheKey = `${pokemonId}_${type}`;
+    try {
+        let audioUrl;
+        if (type === 'latest') {
+            audioUrl = `https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${pokemonId}.ogg`;
+        } else {
+            audioUrl = `https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/legacy/${pokemonId}.ogg`;
+        }
+        if (!audioCache.has(cacheKey)) {
+            const audio = new Audio(audioUrl);
+            audioCache.set(cacheKey, audio);
+        }
+        const audio = audioCache.get(cacheKey);
+        audio.currentTime = 0;
+        await audio.play();
+    } catch (error) {
+        console.error('Error playing Pokemon cry:', error);
+        showError('Pokemon cry not available');
+    }
 }
 
 function searchPokemon(name) {
