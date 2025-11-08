@@ -889,99 +889,159 @@ document.addEventListener('DOMContentLoaded', () => {
         const officialSprites = sprites.filter(s => s.category === 'official');
         const shinySprites = sprites.filter(s => s.category === 'shiny');
         const gameSprites = sprites.filter(s => s.category === 'game' || s.category === 'home');
-        const html = `
-        <div class="pokemon-card">
-            <div class="pokemon-card-header">
-                <h3 class="text-xl font-bold">Visual Gallery</h3>
-                <p class="text-sm text-gray-600">All available sprites, artwork, and visual variants</p>
-            </div>
-       
-            <div class="mb-6">
-                <div class="flex flex-wrap gap-2 mb-4 border-b">
-                    <button class="gallery-tab active px-4 py-2 font-medium" data-gallery="official">Official Art</button>
-                    <button class="gallery-tab px-4 py-2 font-medium" data-gallery="game">Game Sprites</button>
-                    <button class="gallery-tab px-4 py-2 font-medium" data-gallery="shiny">Shiny Variants</button>
-                </div>
-           
-                <div id="galleryOfficial" class="gallery-content">
-                    <div class="sprite-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                        ${officialSprites.map(sprite => `
-                            <div class="sprite-item bg-gradient-to-br from-gray-50 to-gray-100">
-                                <img src="${sprite.url}" alt="${sprite.label}" class="w-full object-contain">
-                                <p class="text-sm mt-2 font-medium text-center">${sprite.label}</p>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-           
-                <div id="galleryShiny" class="gallery-content hidden">
-                    <div class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <p class="text-sm text-yellow-800">
-                            <strong>Shiny Pokémon</strong> are extremely rare variants with alternate color schemes.
-                            The odds of encountering one in the wild are approximately 1 in 4,096!
-                        </p>
-                    </div>
-                    <div class="sprite-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                        ${shinySprites.map(sprite => `
-                            <div class="sprite-item bg-gradient-to-br from-yellow-50 to-amber-100">
-                                <img src="${sprite.url}" alt="${sprite.label}" class="w-full object-contain">
-                                <p class="text-sm mt-2 font-medium text-center">${sprite.label}</p>
-                                <span class="badge mt-2 bg-yellow-500 text-white">Shiny</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-           
-                <div id="galleryGame" class="gallery-content hidden">
-                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                        ${gameSprites.map(sprite => `
-                            <div class="border rounded-lg p-2 bg-gray-50">
-                                <img src="${sprite.url}" alt="${sprite.label}" class="w-full h-24 object-contain">
-                                <p class="text-xs text-center mt-1">${sprite.label}</p>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            </div>
-       
-            ${allForms.length > 1 ? `
-                <div class="mt-8">
-                    <h3 class="text-lg font-semibold mb-4">All Forms Gallery</h3>
-                    <div class="card-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        ${allForms.map(form => `
-                            <div class="border rounded-lg p-4 bg-white">
-                                <img src="${form.sprites.other['official-artwork'].front_default || form.sprites.front_default}"
-                                     alt="${form.name}"
-                                     class="w-full h-32 object-contain">
-                                <p class="text-sm text-center mt-2 font-medium capitalize">${form.name.replace('-', ' ')}</p>
-                                <div class="flex gap-1 justify-center mt-1 flex-wrap">
-                                    ${form.types.map(type => `
-                                        <span class="badge badge-secondary text-xs">${type.type.name}</span>
-                                    `).join('')}
+        
+        const renderGallerySection = (id, items, title, description = '', isShiny = false) => {
+            if (!items.length) return '';
+            
+            return `
+                <div id="gallery${id}" class="gallery-content ${id !== 'Official' ? 'hidden' : ''}">
+                    ${description ? `
+                        <div class="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-lg">
+                            <p class="text-sm text-blue-800">${description}</p>
+                        </div>
+                    ` : ''}
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                        ${items.map(sprite => `
+                            <div class="gallery-item bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200">
+                                <div class="p-4 h-40 flex items-center justify-center bg-gray-50">
+                                    <img 
+                                        src="${sprite.url}" 
+                                        alt="${sprite.label}" 
+                                        class="max-h-full max-w-full object-contain"
+                                        loading="lazy"
+                                    >
+                                </div>
+                                <div class="p-3 border-t border-gray-100">
+                                    <p class="text-sm font-medium text-center text-gray-800 truncate">${sprite.label}</p>
+                                    ${isShiny ? `
+                                        <div class="flex justify-center mt-2">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                <svg class="mr-1.5 h-2 w-2 text-yellow-400" fill="currentColor" viewBox="0 0 8 8">
+                                                    <circle cx="4" cy="4" r="3" />
+                                                </svg>
+                                                Shiny
+                                            </span>
+                                        </div>
+                                    ` : ''}
                                 </div>
                             </div>
                         `).join('')}
+                    </div>
+                </div>
+            `;
+        };
+
+        const html = `
+        <div class="space-y-8">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-900">Pokémon Gallery</h2>
+                <p class="mt-2 text-sm text-gray-600">Explore all available artwork and sprites</p>
+            </div>
+            
+            <div class="mb-8">
+                <div class="flex flex-wrap gap-2 justify-center mb-6">
+                    <button class="gallery-tab ${officialSprites.length ? 'active' : 'opacity-50 cursor-not-allowed'} px-4 py-2 rounded-md font-medium text-sm transition-colors duration-200 ${officialSprites.length ? 'text-blue-600 hover:bg-blue-50' : 'text-gray-400'}" 
+                            data-gallery="official"
+                            ${!officialSprites.length ? 'disabled' : ''}>
+                        Official Art
+                    </button>
+                    <button class="gallery-tab ${gameSprites.length ? '' : 'opacity-50 cursor-not-allowed'} px-4 py-2 rounded-md font-medium text-sm transition-colors duration-200 ${gameSprites.length ? 'text-blue-600 hover:bg-blue-50' : 'text-gray-400'}" 
+                            data-gallery="game"
+                            ${!gameSprites.length ? 'disabled' : ''}>
+                        Game Sprites
+                    </button>
+                    <button class="gallery-tab ${shinySprites.length ? '' : 'opacity-50 cursor-not-allowed'} px-4 py-2 rounded-md font-medium text-sm transition-colors duration-200 ${shinySprites.length ? 'text-blue-600 hover:bg-blue-50' : 'text-gray-400'}" 
+                            data-gallery="shiny"
+                            ${!shinySprites.length ? 'disabled' : ''}>
+                        Shiny Variants
+                    </button>
+                </div>
+                
+                ${renderGallerySection('Official', officialSprites, 'Official Artwork', 'High-quality official artwork from the Pokémon games and media.')}
+                ${renderGallerySection('Game', gameSprites, 'Game Sprites', 'Sprites used in various Pokémon games.')}
+                ${renderGallerySection('Shiny', shinySprites, 'Shiny Variants', 'Shiny Pokémon are extremely rare variants with alternate color schemes. The odds of encountering one in the wild are approximately 1 in 4,096!', true)}
+            </div>
+            
+            ${allForms.length > 1 ? `
+                <div class="mt-12">
+                    <div class="text-center mb-6">
+                        <h3 class="text-xl font-semibold text-gray-900">Alternate Forms</h3>
+                        <p class="mt-1 text-sm text-gray-500">Different forms and variants of ${pokemon.name}</p>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                        ${allForms.map(form => {
+                            const formName = form.name.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                            const imgUrl = form.sprites.other?.['official-artwork']?.front_default || form.sprites.front_default;
+                            return `
+                                <div class="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200">
+                                    <div class="p-4 h-40 flex items-center justify-center bg-gray-50">
+                                        <img 
+                                            src="${imgUrl}" 
+                                            alt="${form.name}" 
+                                            class="max-h-full max-w-full object-contain"
+                                            loading="lazy"
+                                            onerror="this.onerror=null; this.src='https://via.placeholder.com/200/eee?text=Image+Not+Found'"
+                                        >
+                                    </div>
+                                    <div class="p-3 border-t border-gray-100">
+                                        <p class="text-sm font-medium text-center text-gray-900 mb-2">${formName}</p>
+                                        <div class="flex flex-wrap justify-center gap-1">
+                                            ${form.types.map(type => `
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                    ${type.type.name.charAt(0).toUpperCase() + type.type.name.slice(1)}
+                                                </span>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
                     </div>
                 </div>
             ` : ''}
         </div>
     `;
         galleryTab.innerHTML = html;
-        // Add gallery tab switching
-        const galleryTabs = galleryTab.querySelectorAll('.gallery-tab');
+        
+        // Add gallery tab switching with smooth transitions
+        const galleryTabs = galleryTab.querySelectorAll('.gallery-tab:not(:disabled)');
         galleryTabs.forEach(tab => {
             tab.addEventListener('click', () => {
                 const galleryType = tab.getAttribute('data-gallery');
-
-                galleryTabs.forEach(t => t.classList.remove('active', 'border-b-2', 'border-blue-600', 'text-blue-600'));
-                tab.classList.add('active', 'border-b-2', 'border-blue-600', 'text-blue-600');
-
-                galleryTab.querySelectorAll('.gallery-content').forEach(c => c.classList.add('hidden'));
-                document.getElementById(`gallery${galleryType.charAt(0).toUpperCase() + galleryType.slice(1)}`).classList.remove('hidden');
+                const targetId = `gallery${galleryType.charAt(0).toUpperCase() + galleryType.slice(1)}`;
+                const targetElement = document.getElementById(targetId);
+                
+                if (!targetElement) return;
+                
+                // Update active tab
+                galleryTabs.forEach(t => {
+                    t.classList.remove('active', 'bg-blue-50', 'font-semibold');
+                    t.classList.add('font-medium');
+                });
+                
+                tab.classList.add('active', 'bg-blue-50', 'font-semibold');
+                tab.classList.remove('font-medium');
+                
+                // Hide all gallery sections and show the selected one with a fade effect
+                galleryTab.querySelectorAll('.gallery-content').forEach(content => {
+                    content.classList.add('hidden', 'opacity-0');
+                    content.classList.remove('opacity-100');
+                });
+                
+                targetElement.classList.remove('hidden');
+                // Force reflow to enable transition
+                void targetElement.offsetWidth;
+                targetElement.classList.add('opacity-100');
+                
+                // Scroll to the top of the gallery section
+                galleryTab.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             });
         });
-        // Set initial active state
-        galleryTabs[0].classList.add('border-b-2', 'border-blue-600', 'text-blue-600');
+        
+        // Set initial active state if there are any tabs
+        if (galleryTabs.length > 0) {
+            galleryTabs[0].click();
+        }
     }
 
     function displayCards(data) {
