@@ -957,7 +957,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     detailsEl.innerHTML = `
-      <div class="move-details-header relative bg-white border-2 border-gray-200 rounded-lg p-4 mb-4">
+      <div class="move-details-header relative bg-white border-0 border-gray-200 rounded-lg p-4 mb-4">
         <h4 class="text-lg font-bold pr-16">${capitalize(move.name.replace(/-/g, ' '))}</h4>
         <span class="move-type-badge type-${type}">${type}</span>
         <span class="move-category-badge" style="background: ${getCategoryColor(category)}">
@@ -1264,14 +1264,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="p-3 border-t border-gray-100">
                   <p class="text-sm font-medium text-center text-gray-800 truncate">${sprite.label}</p>
                   ${isShiny ? `
-                    <div class="flex justify-center mt-2">
-                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                        <svg class="mr-1.5 h-2 w-2 text-yellow-400" fill="currentColor" viewBox="0 0 8 8">
-                          <circle cx="4" cy="4" r="3" />
-                        </svg>
-                        Shiny
-                      </span>
-                    </div>
+                    
                   ` : ''}
                 </div>
               </div>
