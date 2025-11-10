@@ -888,12 +888,12 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           <div class="move-stats">
             <div class="move-stat">
-              <span>PWR:</span>
-              <span>${power}</span>
-            </div>
-            <div class="move-stat">
               <span>ACC:</span>
               <span>${accuracy}</span>
+            </div>
+            <div class="move-stat">
+              <span>PWR:</span>
+              <span>${power}</span>
             </div>
             <div class="move-stat">
               <span>PP:</span>
@@ -957,38 +957,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     detailsEl.innerHTML = `
-      <div class="move-details-header">
-        <h4 class="text-lg font-bold">${capitalize(move.name.replace(/-/g, ' '))}</h4>
-        <div class="flex items-center gap-2 mt-1">
-          <span class="type-badge type-${type}">${type}</span>
-          <span class="px-2 py-0.5 rounded text-xs font-medium text-white" style="background: ${getCategoryColor(category)}">
-            ${category === 'physical' ? 'PHYSICAL' : category === 'special' ? 'SPECIAL' : 'STATUS'}
-          </span>
-        </div>
+      <div class="move-details-header relative bg-white border-2 border-gray-200 rounded-lg p-4 mb-4">
+        <h4 class="text-lg font-bold pr-16">${capitalize(move.name.replace(/-/g, ' '))}</h4>
+        <span class="move-type-badge type-${type}">${type}</span>
+        <span class="move-category-badge" style="background: ${getCategoryColor(category)}">
+          ${category === 'physical' ? 'PHY' : category === 'special' ? 'SPC' : 'STA'}
+        </span>
+      </div>
+      <div class="move-description mt-4 text-sm text-gray-700">
+         ${description}
       </div>
       
-      <div class="move-stats-grid grid grid-cols-4 gap-2 mt-3">
-        <div class="stat-box">
-          <div class="stat-label">Power</div>
-          <div class="stat-value">${power}</div>
-        </div>
+      <div class="move-stats-grid grid grid-cols-5 gap-2 mt-3">
         <div class="stat-box">
           <div class="stat-label">Accuracy</div>
           <div class="stat-value">${accuracy}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Power</div>
+          <div class="stat-value">${power}</div>
         </div>
         <div class="stat-box">
           <div class="stat-label">PP</div>
           <div class="stat-value">${pp}</div>
         </div>
         <div class="stat-box">
+          <div class="stat-label">Priority</div>
+          <div class="stat-value">${priority}</div>
+        </div>
+        
+        <div class="stat-box">
           <div class="stat-label">Target</div>
           <div class="stat-value">${target}</div>
         </div>
       </div>
       
-      <div class="move-description mt-4 text-sm text-gray-700">
-        ${description}
-      </div>
+      
       
       ${flags.length > 0 ? `
         <div class="move-flags mt-3 pt-3 border-t border-gray-200">
@@ -1001,14 +1005,6 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       ` : ''}
       
-      <div class="move-meta mt-4 pt-3 border-t border-gray-200">
-        <div class="grid grid-cols-1 gap-3">
-          <div>
-            <div class="text-xs font-medium text-gray-500">Priority</div>
-            <div class="text-sm">${priority}</div>
-          </div>
-        </div>
-      </div>
     `;
     
     detailsEl.classList.add('active');
